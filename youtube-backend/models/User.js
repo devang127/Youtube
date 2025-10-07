@@ -2,9 +2,8 @@ const mongoose = require('mongoose')
 
 
 const userSchema = new mongoose.Schema({
-    _id: mongoose.Schema.Types.ObjectId,
     channelName:{type:String, required:true},
-    email:{type:String, required:true},
+    email: { type: String, required: true, unique: true },
     phone:{type:Number, required:true},
     password: {type:String, required:true},
     logoUrl: {type:String, required:true},
@@ -12,6 +11,7 @@ const userSchema = new mongoose.Schema({
     subscribers: {type:Number, required:true},
     subscribedBy: [{type:mongoose.Schema.Types.ObjectId, ref: 'User'}],
     subscribedChannels: [{type:mongoose.Schema.Types.ObjectId, ref: 'User'}],
+    refreshToken: { type: String },
     Timestamp: {type:Date, default:Date.now},
 })
 

@@ -18,4 +18,6 @@ Router.put("/like/:videoId", checkAuth, videoController.likeVideo);
 // Dislike video 
 Router.put("/dislike/:videoId", checkAuth, videoController.disLikeVideo);
 
+Router.get('/:videoId', videoController.getVideoDetails);
+
 module.exports = Router;

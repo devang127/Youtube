@@ -13,9 +13,9 @@ cloudinary.config({
 
 const signup = async (req, res) => {
     try {
-        const users = await User.find({email: req.body.email});
-        if (users.length > 0) {
-            return res.status(500).json({message: "User already exists"});
+        const existingUser = await User.findOne({ email: req.body.email });
+        if (existingUser) {
+            return res.status(409).json({ message: "User with this email already exists" });
         }
 
         const hashcode = await bcrypt.hash(req.body.password, 10);
@@ -35,52 +35,131 @@ const signup = async (req, res) => {
 
         const user = await newUser.save();
         res.status(201).json({
-            newUser: user,
+            message: "User created successfully",
+            user: {
+                _id: user._id,
+                channelName: user.channelName,
+                email: user.email,
+            },
         });
 
     } catch (err) {
         console.log(err);
-        res.status(500).json({message: "Internal Server Error"});
+        res.status(500).json({ message: "Internal Server Error" });
     }
 };
 
 
+// The updated login function
 const login = async (req, res) => {
     try {
-        const users = await User.find({ email: req.body.email });
-        if (users.length === 0) {
-            return res.status(404).json({message: "Email or password is incorrect"});
+        const user = await User.findOne({ email: req.body.email });
+        if (!user) {
+            return res.status(401).json({ message: "Email or password is incorrect" });
         }
 
-        const isValid = await bcrypt.compare(req.body.password, users[0].password);
+        const isValid = await bcrypt.compare(req.body.password, user.password);
         if (!isValid) {
-            return res.status(500).json({message: "Email or password is incorrect"});
+            return res.status(401).json({ message: "Email or password is incorrect" });
         }
+        
+        const accessToken = jwt.sign(
+            { _id: user._id, channelName: user.channelName, email: user.email },
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: '30m' }
+        );
 
-        const token = jwt.sign({
-            _id: users[0]._id,
-            channelName: users[0].channelName,
-            email: users[0].email,
-            phone: users[0].phone,
-            logoId: users[0].logoId,
-        }, 'reynasage', {expiresIn: '24h'});
+     
+        const refreshToken = jwt.sign(
+            { _id: user._id },
+            process.env.REFRESH_TOKEN_SECRET,
+            { expiresIn: '7d' }
+        );
+
+  
+        user.refreshToken = refreshToken;
+        await user.save();
+
+        res.cookie('jwt', refreshToken, {
+            httpOnly: true,
+            secure: true, 
+            sameSite: 'None', 
+            maxAge: 7 * 24 * 60 * 60 * 1000 
+        });
 
         res.status(200).json({
             message: "Login Successful",
-            token: token,
+            accessToken: accessToken,
             user: {
-                _id: users[0]._id,
-                channelName: users[0].channelName,
-                email: users[0].email,
-                phone: users[0].phone,
-                logoUrl: users[0].logoUrl,
-                subscribers: users[0].subscribers,
+                _id: user._id,
+                channelName: user.channelName,
+                email: user.email,
+                phone: user.phone,
+                logoUrl: user.logoUrl,
+                subscribers: user.subscribers,
             }
         });
+
     } catch (err) {
         console.log(err);
-        res.status(500).json({message: "Internal Server Error"});
+        res.status(500).json({ message: "Internal Server Error" });
     }
+};
+
+const refreshToken = async (req, res) => {
+
+    const cookies = req.cookies;
+    if (!cookies?.jwt) {
+        return res.status(401).json({ message: "Unauthorized: No refresh token" });
+    }
+    
+    const refreshToken = cookies.jwt;
+
+
+    const user = await User.findOne({ refreshToken: refreshToken });
+    if (!user) {
+        return res.status(403).json({ message: "Forbidden: Invalid refresh token" });
+    }
+    
+ 
+    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
+        if (err || user._id.toString() !== decoded._id) {
+            return res.status(403).json({ message: "Forbidden: Token verification failed" });
+        }
+
+        const accessToken = jwt.sign(
+            { _id: user._id, channelName: user.channelName, email: user.email },
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: '15m' }
+        );
+
+        res.json({ accessToken });
+    });
+};
+
+
+const logout = async (req, res) => {
+    const cookies = req.cookies;
+    if (!cookies?.jwt) {
+        return res.sendStatus(204); 
+    }
+
+    const refreshToken = cookies.jwt;
+    const user = await User.findOne({ refreshToken: refreshToken });
+    if (user) {
+        user.refreshToken = null;
+        await user.save();
+    }
+    
+    res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
+    res.status(200).json({ message: "Logout successful" });
+};
+
+module.exports = {
+    signup,
+    login,
+    refreshToken,
+    logout
 };
 
 
@@ -114,8 +193,37 @@ const subscribedByUser = async (req, res) => {
     }
 };
 
+// just check the user
+const getUserProfile = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+   
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: "Invalid user ID format" });
+        }
+
+
+        const user = await User.findById(userId).select('-password -refreshToken');
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+    
+        res.status(200).json({ user });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
 module.exports = {
     signup,
     login,
-    subscribedByUser
+    refreshToken,
+    logout,
+    subscribedByUser,
+    getUserProfile
 };

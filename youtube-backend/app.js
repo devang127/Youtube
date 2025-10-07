@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const fileUpload = require('express-fileupload');
-
+const cookieParser = require('cookie-parser');
 const userRoute = require('./routes/userRoutes');
 const videoRoute = require('./routes/videoRoutes');
 
@@ -23,6 +23,7 @@ connectDb();
 
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use(fileUpload({
     useTempFiles: true,

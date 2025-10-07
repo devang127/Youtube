@@ -1,5 +1,7 @@
 const cloudinary = require('cloudinary').v2;
 const Video = require('../models/Video');
+const Like = require('../models/Like')
+const Dislike = require('../models/Dislike');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
@@ -9,7 +11,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Upload video 
 const uploadVideo = async (req, res) => {
     try {
         const user = req.user;
@@ -133,36 +134,39 @@ const deleteVideo = async (req, res) => {
     }
 };
 
-
 const likeVideo = async (req, res) => {
     try {
-  
-        const verifyUser = req.user;
-        console.log(verifyUser);
+        const userId = req.user._id; 
+        const videoId = req.params.videoId;
 
-        const video = await Video.findById(req.params.videoId)
-        console.log(video)
+        await Dislike.findOneAndDelete({
+            user: userId,
+            video: videoId
+        });
+
+        const newLike = new Like({
+            user: userId,
+            video: videoId
+        });
         
-        if(video.likedBy.includes(verifyUser._id)) {
+        await newLike.save();
+
+        res.status(201).json({
+            message: "Video liked successfully"
+        });
+
+    } catch (err) {
+      
+        if (err.code === 11000) {
             return res.status(400).json({
                 message: "You have already liked this video"
             });
         }
-
-        video.likes += 1;
-        video.likedBy.push(verifyUser._id);
-        await video.save();
-
-        res.status(200).json({
-            message: "Video liked successfully",
-            user: verifyUser
-        });
-
         
-    } catch (err) {
         console.log(err);
         res.status(500).json({
-            error: err
+            message: "An error occurred while liking the video",
+            error: err.message
         });
     }
 };
@@ -171,41 +175,76 @@ const likeVideo = async (req, res) => {
 
 const disLikeVideo = async (req, res) => {
     try {
-  
-        const verifyUser = req.user;
-        console.log(verifyUser);
+        const userId = req.user._id;
+        const videoId = req.params.videoId;
 
-        const video = await Video.findById(req.params.videoId)
-        console.log(video)
-        
-        if(video.dislikedBy.includes(verifyUser._id)) {
+        await Like.findOneAndDelete({
+            user: userId,
+            video: videoId
+        });
+
+        const newDislike = new Dislike({
+            user: userId,
+            video: videoId
+        });
+
+        await newDislike.save();
+
+        res.status(201).json({
+            message: "Video disliked successfully"
+        });
+
+    } catch (err) {
+        // duplicate error code is 11000
+        if (err.code === 11000) {
             return res.status(400).json({
                 message: "You have already disliked this video"
             });
         }
-        if(video.likedBy.includes(verifyUser._id)) {
-            video.likes -= 1;
-            video.likedBy = video.likedBy.filter(userId => userId.toString() !== verifyUser._id.toString());
-        }
-        video.dislike += 1;
-        video.dislikedBy.push(verifyUser._id);
-        await video.save();
 
-        res.status(200).json({
-            message: "Video disliked successfully",
-            user: verifyUser
-        });
-
-        
-    } catch (err) {
         console.log(err);
         res.status(500).json({
-            error: err
+            message: "An error occurred while disliking the video",
+            error: err.message
         });
     }
 };
 
 
+const getVideoDetails = async (req, res) => {
+    try {
+        const { videoId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(videoId)) {
+            return res.status(400).json({ message: "Invalid video ID format" });
+        }
+
+        const video = await Video.findById(videoId);
+        
+        if (!video) {
+            return res.status(404).json({ message: "Video not found" });
+        }
+
+        const likeCount = await Like.countDocuments({ video: videoId });
+
+        const dislikeCount = await Dislike.countDocuments({ video: videoId });
+
+        const videoDetails = video.toObject();
+        
+
+        videoDetails.likes = likeCount;
+        videoDetails.dislikes = dislikeCount;
+        
+        res.status(200).json({
+            message: "Video details fetched successfully",
+            video: videoDetails
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
 
 
 module.exports = {
@@ -213,5 +252,6 @@ module.exports = {
     updateVideo,
     deleteVideo,
     likeVideo,
-    disLikeVideo
+    disLikeVideo,
+    getVideoDetails
 };
