@@ -7,7 +7,7 @@ const fileUpload = require('express-fileupload');
 const cookieParser = require('cookie-parser');
 const userRoute = require('./routes/userRoutes');
 const videoRoute = require('./routes/videoRoutes');
-
+const commentRoute = require('./routes/comment');
 
 const connectDb = async() => {
     try {
@@ -33,5 +33,6 @@ app.use(fileUpload({
 
 app.use('/user', userRoute);
 app.use("/video", videoRoute);
+app.use('/comment', commentRoute);
 
 module.exports = app;
