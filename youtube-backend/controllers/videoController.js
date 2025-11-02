@@ -3,6 +3,7 @@ const Video = require('../models/Video');
 const Like = require('../models/Like')
 const Dislike = require('../models/Dislike');
 const mongoose = require('mongoose');
+const ThumbnailService = require('../utils/thumbnailService');
 require('dotenv').config();
 
 cloudinary.config({ 
@@ -11,12 +12,101 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+// const uploadVideo = async (req, res) => {
+//     try {
+//         const user = req.user;
+        
+//         const uploadVideo = await cloudinary.uploader.upload(req.files.video.tempFilePath, {resource_type: "video"});
+//         // old thumbnail 
+//         // const uploadThumbnail = await cloudinary.uploader.upload(req.files.thumbnail.tempFilePath, {resource_type: "image"});
+
+
+//         // new thumbnail
+//         let thumbnailUrl, thumbnailId;
+
+//         if (req.files && req.files.thumbnail) {
+//             const uploadThumbnail = await cloudinary.uploader.upload(req.files.thumbnail.tempFilePath,
+//                 {
+//                     resource_type: "image",
+//                     folder: "youtube-clone/thumbnails"
+//                 }
+//             );
+            
+//             thumbnailUrl = uploadThumbnail.secure_url;
+//             thumbnailId = uploadThumbnail.public_id;
+//         } else {
+//             console.log('Auto-generating thumbnail from video...');
+//             const generatedThumbnail = await ThumbnailService.generateAndUpload(req.files.video.tempFilePath,2);
+            
+//             thumbnailUrl = generatedThumbnail.url;
+//             thumbnailId = generatedThumbnail.publicId;
+//         }
+
+//         const newVideo = new Video({
+//             _id: new mongoose.Types.ObjectId(),
+//             title: req.body.title,
+//             description: req.body.description,
+//             user_id: user._id,
+//             videoUrl: uploadVideo.secure_url,
+//             videoId: uploadVideo.public_id,
+//             thumbnailurl: uploadThumbnail.secure_url,
+//             thumbnailId: uploadThumbnail.public_id,
+//             category: req.body.category,
+//             tags: req.body.tags.split(','),
+//         });
+
+//         const newUploadedVideoData = await newVideo.save();
+
+//         res.status(200).json({
+//             message: "Video uploaded successfully",
+//             video: newUploadedVideoData
+//         });
+
+//     } catch (err) {
+//         console.log(err);
+//         res.status(500).json({message: "Internal Server Error"});
+//     }
+// };
+
+// Update video 
+
 const uploadVideo = async (req, res) => {
     try {
         const user = req.user;
-        
-        const uploadVideo = await cloudinary.uploader.upload(req.files.video.tempFilePath, {resource_type: "video"});
-        const uploadThumbnail = await cloudinary.uploader.upload(req.files.thumbnail.tempFilePath, {resource_type: "image"});
+        const uploadVideo = await cloudinary.uploader.upload(
+            req.files.video.tempFilePath, 
+            { 
+                resource_type: "video",
+                folder: "youtube-clone/videos"
+            }
+        );
+
+        let thumbnailUrl, thumbnailId;
+        if (req.files && req.files.thumbnail) {
+            const uploadThumbnail = await cloudinary.uploader.upload(
+                req.files.thumbnail.tempFilePath,
+                {
+                    resource_type: "image",
+                    folder: "youtube-clone/thumbnails",
+                    transformation: [
+                        { width: 1280, height: 720, crop: 'fill' }
+                    ]
+                }
+            );
+            thumbnailUrl = uploadThumbnail.secure_url;
+            thumbnailId = uploadThumbnail.public_id;
+        } else {
+            thumbnailUrl = cloudinary.url(uploadVideo.public_id, {
+                resource_type: 'video',
+                format: 'jpg',
+                transformation: [
+                    { width: 1280, height: 720, crop: 'fill', gravity: 'center' },
+                    { start_offset: '2' }
+                ]
+            });
+            
+            thumbnailId = `${uploadVideo.public_id}_thumb`;
+        }
 
         const newVideo = new Video({
             _id: new mongoose.Types.ObjectId(),
@@ -25,26 +115,28 @@ const uploadVideo = async (req, res) => {
             user_id: user._id,
             videoUrl: uploadVideo.secure_url,
             videoId: uploadVideo.public_id,
-            thumbnailurl: uploadThumbnail.secure_url,
-            thumbnailId: uploadThumbnail.public_id,
+            thumbnailurl: thumbnailUrl,
+            thumbnailId: thumbnailId,
             category: req.body.category,
-            tags: req.body.tags.split(','),
+            tags: req.body.tags ? req.body.tags.split(',') : [],
         });
 
-        const newUploadedVideoData = await newVideo.save();
+        await newVideo.save();
 
         res.status(200).json({
             message: "Video uploaded successfully",
-            video: newUploadedVideoData
+            video: newVideo
         });
 
     } catch (err) {
-        console.log(err);
-        res.status(500).json({message: "Internal Server Error"});
+        console.error("Upload error:", err);
+        res.status(500).json({
+            message: err.message || "Internal Server Error"
+        });
     }
 };
 
-// Update video 
+
 const updateVideo = async (req, res) => {
     try {
    
@@ -58,8 +150,6 @@ const updateVideo = async (req, res) => {
         if (video.user_id != verifyUser._id) {
             return res.status(403).json({message: "You have no permission"});
         }
-
-        console.log("verified");
         
         if (req.files && req.files.thumbnail) {
             await cloudinary.uploader.destroy(video.thumbnailId);

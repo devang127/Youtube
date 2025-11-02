@@ -60,8 +60,6 @@ const getVideoComments = async (req, res) => {
     }
 };
 
-
-
 const updateComment = async (req, res) => {
     try {
         const { commentId } = req.params;
@@ -93,7 +91,6 @@ const updateComment = async (req, res) => {
     }
 };
 
-
 const deleteComment = async (req, res) => {
     const { commentId } = req.params;
     const userId = req.user._id;
@@ -106,11 +103,12 @@ const deleteComment = async (req, res) => {
     }
 
 
-    comment.content = "[deleted]";
-    comment.user = null;
-    await comment.save();
-
+    // comment.content = "[deleted]";
+    // comment.user = comment.user;
+    // comment.user = null;
+    await Comment.findByIdAndDelete(commentId);
     res.status(200).json({ message: "Comment deleted successfully." });
+
 };
 
 

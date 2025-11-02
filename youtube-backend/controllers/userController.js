@@ -66,7 +66,7 @@ const login = async (req, res) => {
         const accessToken = jwt.sign(
             { _id: user._id, channelName: user.channelName, email: user.email },
             process.env.ACCESS_TOKEN_SECRET,
-            { expiresIn: '30m' }
+            { expiresIn: '24h' }
         );
 
      
@@ -170,7 +170,6 @@ const subscribedByUser = async (req, res) => {
         const userB = await User.findById(req.params.userBId);
         console.log(userB);
         if(userB.subscribedBy.includes(verifyUser._id)) {
-            console.log("yesh chala");
             return res.status(400).json({message: "You are already subscribed to this channel"});
         }
 
