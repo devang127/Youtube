@@ -155,14 +155,6 @@ const logout = async (req, res) => {
     res.status(200).json({ message: "Logout successful" });
 };
 
-module.exports = {
-    signup,
-    login,
-    refreshToken,
-    logout
-};
-
-
 const subscribedByUser = async (req, res) => {
     try {
         const verifyUser = req.user;
