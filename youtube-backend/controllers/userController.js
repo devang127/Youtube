@@ -11,6 +11,21 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find().select('-password -refreshToken');
+        res.status(200).json({
+            message: "Users fetched successfully",
+            count: users.length,
+            users: users
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
 const signup = async (req, res) => {
     try {
         const existingUser = await User.findOne({ email: req.body.email });
@@ -211,6 +226,7 @@ const getUserProfile = async (req, res) => {
 };
 
 module.exports = {
+    getAllUsers,
     signup,
     login,
     refreshToken,

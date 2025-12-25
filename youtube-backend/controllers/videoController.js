@@ -10,65 +10,38 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
   api_key: process.env.CLOUDINARY_API_KEY, 
   api_secret: process.env.CLOUDINARY_API_SECRET
-});
+}); 
 
-// const uploadVideo = async (req, res) => {
-//     try {
-//         const user = req.user;
-        
-//         const uploadVideo = await cloudinary.uploader.upload(req.files.video.tempFilePath, {resource_type: "video"});
-//         // old thumbnail 
-//         // const uploadThumbnail = await cloudinary.uploader.upload(req.files.thumbnail.tempFilePath, {resource_type: "image"});
+const getAllVideos = async (req, res) => {
+    try {
+        const videos = await Video.find()
+            .populate('user_id', 'channelName profilePic')
+            .sort({ createdAt: -1 });
 
+        const videosWithCounts = await Promise.all(
+            videos.map(async (video) => {
+                const likeCount = await Like.countDocuments({ video: video._id });
+                const dislikeCount = await Dislike.countDocuments({ video: video._id });
+                
+                const videoObj = video.toObject();
+                videoObj.likes = likeCount;
+                videoObj.dislikes = dislikeCount;
+                
+                return videoObj;
+            })
+        );
 
-//         // new thumbnail
-//         let thumbnailUrl, thumbnailId;
+        res.status(200).json({
+            message: "Videos fetched successfully",
+            count: videosWithCounts.length,
+            videos: videosWithCounts
+        });
 
-//         if (req.files && req.files.thumbnail) {
-//             const uploadThumbnail = await cloudinary.uploader.upload(req.files.thumbnail.tempFilePath,
-//                 {
-//                     resource_type: "image",
-//                     folder: "youtube-clone/thumbnails"
-//                 }
-//             );
-            
-//             thumbnailUrl = uploadThumbnail.secure_url;
-//             thumbnailId = uploadThumbnail.public_id;
-//         } else {
-//             console.log('Auto-generating thumbnail from video...');
-//             const generatedThumbnail = await ThumbnailService.generateAndUpload(req.files.video.tempFilePath,2);
-            
-//             thumbnailUrl = generatedThumbnail.url;
-//             thumbnailId = generatedThumbnail.publicId;
-//         }
-
-//         const newVideo = new Video({
-//             _id: new mongoose.Types.ObjectId(),
-//             title: req.body.title,
-//             description: req.body.description,
-//             user_id: user._id,
-//             videoUrl: uploadVideo.secure_url,
-//             videoId: uploadVideo.public_id,
-//             thumbnailurl: uploadThumbnail.secure_url,
-//             thumbnailId: uploadThumbnail.public_id,
-//             category: req.body.category,
-//             tags: req.body.tags.split(','),
-//         });
-
-//         const newUploadedVideoData = await newVideo.save();
-
-//         res.status(200).json({
-//             message: "Video uploaded successfully",
-//             video: newUploadedVideoData
-//         });
-
-//     } catch (err) {
-//         console.log(err);
-//         res.status(500).json({message: "Internal Server Error"});
-//     }
-// };
-
-// Update video 
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
 
 const uploadVideo = async (req, res) => {
     try {
@@ -136,7 +109,6 @@ const uploadVideo = async (req, res) => {
     }
 };
 
-
 const updateVideo = async (req, res) => {
     try {
    
@@ -189,7 +161,6 @@ const updateVideo = async (req, res) => {
     }
 };
 
-// Delete video 
 const deleteVideo = async (req, res) => {
     try {
      
@@ -260,8 +231,6 @@ const likeVideo = async (req, res) => {
         });
     }
 };
-
-
 
 const disLikeVideo = async (req, res) => {
     try {
@@ -337,11 +306,14 @@ const getVideoDetails = async (req, res) => {
 };
 
 
+
+
 module.exports = {
     uploadVideo,
     updateVideo,
     deleteVideo,
     likeVideo,
     disLikeVideo,
-    getVideoDetails
+    getVideoDetails,
+    getAllVideos
 };

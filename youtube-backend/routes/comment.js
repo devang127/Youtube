@@ -3,6 +3,7 @@ const Router = express.Router();
 const checkAuth = require('../middleware/checkAuth');
 const commentController = require('../controllers/commentController');
 
+Router.get('/', commentController.getAllComments);
 Router.get('/video/:videoId', commentController.getVideoComments);
 Router.post('/video/:videoId', checkAuth, commentController.addComment);
 Router.put('/:commentId', checkAuth, commentController.updateComment);

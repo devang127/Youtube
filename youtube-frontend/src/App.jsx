@@ -1,35 +1,42 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import "./assets/sass/style.scss";
+import { Suspense } from "react";
+import { Outlet } from "react-router-dom";
+import Header from "./components/partials/Header";
+import Footer from "./components/partials/Footer";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
+
+const LoadingScreen = () => (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      backgroundColor: "#323131",
+      zIndex: 10000,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    }}
+  >
+    <img src="/media/images/common/main-logo.svg" alt="loading" width={200} />
+  </div>
+);
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+    <QueryClientProvider client={queryClient}>
+      <Suspense fallback={<LoadingScreen />}>
+        <Header />
+        <main>
+          <Outlet />
+        </main>
+        <Footer />
+      </Suspense>
+    </QueryClientProvider>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

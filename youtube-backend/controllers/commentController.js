@@ -2,6 +2,20 @@
 const Comment = require('../models/Comment');
 require('dotenv').config();
 
+const getAllComments = async (req, res) => {
+    try {
+        const comments = await Comment.find().populate('user', 'channelName logoUrl').sort({ createdAt: -1 });
+        res.status(200).json({
+            message: "Comments fetched successfully",
+            count: comments.length,
+            comments: comments
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
 const addComment = async (req, res) => {
     const { videoId } = req.params;
     const { content, parentCommentId } = req.body;
@@ -115,6 +129,7 @@ const deleteComment = async (req, res) => {
 // like cmt is pending
 
 module.exports = {
+    getAllComments,
     addComment,
     getVideoComments,
     deleteComment,

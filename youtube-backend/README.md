@@ -17,8 +17,8 @@ Done = delete video from db and cloudinary
 Done = get video by it
 Done = Like video
 Done = dislike video
+Done = auto thumbnail generation = working
 <!-- pending -->
-research pending = auto thumbnail generation = working
 research pending = vidoe analytics = wachtime likes.
 research pending = search functionality.
 research pending = watch history
@@ -34,7 +34,9 @@ Done = get
 <!-- pending -->
 pending research = notification to both video user and the one whos commenting and + whos replying that comment should get notification.
 
-<!-- TODO--> 
+
+
+<!-- thinking about--> TODO
 research pending = user subscribe to other user notification sending
 research pending = when user uploaded the video then the subscribed user should get notification. 
 research pending = user activity like how many views a video is getting 

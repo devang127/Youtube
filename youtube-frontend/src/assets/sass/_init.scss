@@ -1,0 +1,82 @@
+@use "variables" as *;
+@use "sass:color";
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap");
+
+// mixins
+@mixin too-small-mobile {
+  @media (min-width: $too-small-mobile) {
+    @content;
+  }
+}
+
+@mixin small-mobile {
+  @media (min-width: $small-mobile) {
+    @content;
+  }
+}
+
+@mixin mid-mobile {
+  @media (min-width: $mid-mobile) {
+    @content;
+  }
+}
+
+@mixin mobile {
+  @media (min-width: $mobile) {
+    @content;
+  }
+}
+
+@mixin small-tab {
+  @media (min-width: $small-tab) {
+    @content;
+  }
+}
+
+@mixin big-tab {
+  @media (min-width: $big-tab) {
+    @content;
+  }
+}
+
+@mixin small-desktop {
+  @media (min-width: $small-desktop) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: $desktop) {
+    @content;
+  }
+}
+
+@mixin mid-desktop {
+  @media (min-width: $mid-desktop) {
+    @content;
+  }
+}
+
+@mixin large-desktop {
+  @media (min-width: $large-desktop) {
+    @content;
+  }
+}
+
+@mixin center() {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+// Common CSS Classes Starts
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  color: $text-color;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+

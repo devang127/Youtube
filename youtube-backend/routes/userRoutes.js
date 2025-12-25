@@ -3,6 +3,7 @@ const Router = express.Router();
 const userController = require('../controllers/userController');
 const checkAuth = require('../middleware/checkAuth');
 
+Router.get('/', userController.getAllUsers);
 
 Router.post('/signup', userController.signup);
 
