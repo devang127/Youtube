@@ -1,3 +1,160 @@
 @use "variables" as *;
 @use "init" as *;
 
+* {
+    background-color: #0f0f0f;
+}
+
+main {
+    margin-left: "250px";
+    flex: 1;
+    padding: "20px";
+    margin-top: "60px";
+}
+
+aside {
+    width: "250px";
+    position: "fixed";
+    left: 0;
+    top: "60px";
+    bottom: 0;
+    overflow-y: "auto";
+    background-color: "#fff";
+    border-right: "1px solid #e0e0e0";
+}
+
+header {
+    position: fixed;
+    width: 100%;
+    z-index: 20;
+
+    .top-nav {
+        width: 100%;
+        height: 56px;
+        display: flex;
+        justify-content: space-between;
+        padding: 9px 14px 0px;
+
+        .burger-logo-wrap {
+            display: flex;
+            gap: 23px;
+            padding-top: 5px;
+
+            figure {
+                width: 93px;
+                height: 20px;
+            }
+        }
+
+        .profile {
+            display: flex;
+            padding-top: 0px;
+            align-items: center;
+            gap: 20px;
+
+            .create-wrap {
+                display: flex;
+
+                gap: 5px;
+                padding: 5px 14px;
+                background-color: #3f3f3f9a;
+                border-radius: 50em;
+                align-items: center;
+
+                p {
+                    background-color: transparent;
+                    margin: 0;
+                    color: $white;
+                    font-size: 14px;
+                    font-weight: 500;
+                }
+
+                span {
+                    display: flex;
+                    align-items: center;
+                    background-color: transparent;
+
+                    svg {
+                        width: 26px;
+                        height: 26px;
+                        background-color: transparent;
+                        stroke: $white;
+                    }
+                }
+            }
+
+            .notification-wrap {
+                display: flex;
+                align-items: center;
+                width: 24px;
+                height: 24px;
+
+                svg {
+                    height: 100%;
+                    width: 100%;
+                    background-color: transparent;
+                    stroke: $white;
+                    stroke-width: 3;
+                }
+            }
+
+            .avatar-image-wrapper {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                overflow: hidden;
+            }
+        }
+
+        .search-wrap {
+            display: flex;
+
+            input {
+                width: 545px;
+                border: none;
+                border-radius: 50em;
+                border-bottom-right-radius: 0px;
+                border-top-right-radius: 0px;
+                padding: 0 8px;
+                font-size: 14px;
+                border: 1px solid #303030;
+                border-right: 0px;
+                padding: 10px 15px;
+                height: 39px;
+
+                &:focus {
+                    outline: none;
+                }
+
+                &::placeholder {
+                    font-size: 16px;
+                }
+            }
+
+            button {
+                width: 64px;
+                height: 39px;
+                // border: none;
+                border: 1px solid #303030;
+                background-color: #222222;
+                border-top-right-radius: 50em;
+                border-bottom-right-radius: 50em;
+
+                cursor: pointer;
+
+                svg {
+                    width: 24px;
+                    height: 24px;
+                    background-color: transparent;
+                }
+            }
+        }
+    }
+}
+
+
+.side-nav {
+    background-color: #0f0f0f;
+    height: 100vh;
+    width: 240px;
+}
